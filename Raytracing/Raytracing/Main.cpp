@@ -9,6 +9,7 @@
 #include "RayCasting.h"
 #include "Shape.h"
 #include "Sphere.h"
+#include "Plane.h"
 #include "List.h"
 #include <SDL.h>
 #include <stdio.h>
@@ -197,6 +198,7 @@ int main(int argc, char* args[])
 	Shape *greySphere = new Sphere(new glm::vec3(-5.5, 0, -15), glm::vec3(1.0f, 0.90f, 0.90f), 3);
 	//floor
 	Shape *floorSphere = new Sphere(new glm::vec3(0, -10004, -20), glm::vec3(0.2, 0.2, 0.2), 10000);
+	Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(0.2, 0.2, 0.2), new glm::vec3(0, 1, 0), 400, 400);
 
 	//add all shapes to linked list
 	List *shapeList = new List();
@@ -204,7 +206,7 @@ int main(int argc, char* args[])
 	shapeList->insert(shapeList->tail, new Node(yellowSphere));
 	shapeList->insert(shapeList->tail, new Node(blueSphere));
 	shapeList->insert(shapeList->tail, new Node(greySphere));
-	shapeList->insert(shapeList->tail, new Node(floorSphere));
+	shapeList->insert(shapeList->tail, new Node(floorPlane));
 
 
 	//initialize SDL

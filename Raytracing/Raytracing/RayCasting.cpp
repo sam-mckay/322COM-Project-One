@@ -56,6 +56,7 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 			*/
 
 			double prevShape = 1;
+			double prevDist = -1;
 
 			for (int k = 0; k < shapeList->getLength(); k++)
 			{
@@ -63,19 +64,17 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 				//std::cout << "LOOP: " << k << std::endl;
 				if (currentShape->intersection(rayOrigin, rayDir))
 				{
-					if (prevShape == 1 || prevShape < 0 && currentShape->position->z > prevShape)
+					if (prevDist == -1 || prevDist > 0 && glm::distance(*currentShape->position, *rayOrigin) < prevDist)
 					{
 						glm::vec3 colour = currentShape->colour;
 						view[i][j].x = colour.r;
 						view[i][j].y = colour.g;
 						view[i][j].z = colour.b;
-						prevShape = currentShape->position->z;
+						prevDist = glm::distance(*currentShape->position, *rayOrigin);
 						//std::cout << "SUCCESS: COLOUR: " << colour.r << "," << colour.g << "," << colour.b << std::endl;
 					}
 				}
 			}
-
-
 		}
 	}
 }

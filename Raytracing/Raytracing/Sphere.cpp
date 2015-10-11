@@ -65,6 +65,8 @@ bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
 	return true;
 }
 
+/*
+
 void Sphere::draw(glm::vec3 **view)
 {
 	//calculate width of circle at specific point in circle
@@ -83,4 +85,4 @@ void Sphere::draw(glm::vec3 **view)
 	//drawLine(view, position->x, position->y, position->y + 200, position->z, colour);
 
 
-}
+}*/
