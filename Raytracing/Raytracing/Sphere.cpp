@@ -58,11 +58,31 @@ bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
 	}
 
 	//calculate distance to edge of sphere from current point
+		//thc
 	double distanceToSphereEdge = sqrt(pow(radius, 2) - centreToCurrentPoint);
+
+	//std::cout << "Distance to edge of sphere: " << distanceToSphereEdge << std::endl;
+
+	if (rayDistance - distanceToSphereEdge < rayDistance + distanceToSphereEdge)
+	{
+		t = rayDistance - distanceToSphereEdge;
+		//std::cout << "Sphere T: " << t << std::endl;
+	}
+	else
+	{
+		t = rayDistance + distanceToSphereEdge;
+		//std::cout << "Sphere T: " << t << std::endl;
+	}
 
 	//
 	//std::cout << "SUCCESS - INTERSECTION" << std::endl;
 	return true;
+}
+
+glm::vec3 Sphere::getNormal(glm::vec3 intersectionPoint)
+{
+	glm::vec3 normal = intersectionPoint - *position;
+	return normal;
 }
 
 /*

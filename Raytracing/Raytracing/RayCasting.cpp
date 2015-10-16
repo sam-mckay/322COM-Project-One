@@ -1,4 +1,4 @@
-#include "RayCasting.h"
+﻿#include "RayCasting.h"
 
 //constructor
 RayCasting::RayCasting()
@@ -6,12 +6,13 @@ RayCasting::RayCasting()
 }
 
 //new constructor
-RayCasting::RayCasting(int width, int height, double aspect, double fov)
+RayCasting::RayCasting(int width, int height, double aspect, double fov, Light *light)
 {
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 	ASPECT_RATIO = aspect;
 	FOV = fov;
+	mainLight = light;
 }
 
 
@@ -64,17 +65,110 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 				//std::cout << "LOOP: " << k << std::endl;
 				if (currentShape->intersection(rayOrigin, rayDir))
 				{
-					if (prevDist == -1 || prevDist > 0 && glm::distance(*currentShape->position, *rayOrigin) < prevDist)
+					if (prevDist == -1 || (prevDist > 0 && currentShape->t < prevDist))
 					{
 						glm::vec3 colour = currentShape->colour;
 						view[i][j].x = colour.r;
 						view[i][j].y = colour.g;
 						view[i][j].z = colour.b;
-						prevDist = glm::distance(*currentShape->position, *rayOrigin);
-						//std::cout << "SUCCESS: COLOUR: " << colour.r << "," << colour.g << "," << colour.b << std::endl;
+						prevDist = currentShape->t;
+						hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList);
+						if (view[i][j].x != 0 && view[i][j].y != 0 && view[i][j].z != 0)
+							phongShading(view, i ,j, currentShape, rayOrigin, rayDir);
+						
 					}
 				}
 			}
+		}
+	}
+}
+
+//calculate phong shading for lighting
+void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir)
+{
+	//
+	//
+	//ambient lighting
+	//
+	//
+	glm::vec3 ambient = mainLight->ambient * view[i][j] * mainLight->lightIntensity;
+
+	//
+	//
+	//diffuse lighting
+	//
+	//
+	glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+		//calculate intersection point
+	glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
+		//calculate lightRay and normals
+	glm::vec3 lightRay = *mainLight->position - intersectionPoint;
+	//glm::vec3 normal = intersectionPoint - *currentShape->position;
+	glm::vec3 normal = currentShape->getNormal(intersectionPoint);
+		//normalize
+	lightRay = glm::normalize(lightRay);
+	normal= glm::normalize(normal);
+		//calculate diffuse
+	glm::vec3 diffuse = view[i][j] * mainLight->diffuse * mainLight->lightIntensity * float(fmax(0, glm::dot(lightRay, normal)));
+
+	//
+	//
+	//Specular lighting
+	//
+	//
+	glm::vec3 specular;
+		//calculate reflection of L
+		//r = 2 * (L.N) * N - L
+	glm::vec3 reflectionLightRay;
+	reflectionLightRay = 2.0f * glm::dot(lightRay, normal) * normal - lightRay;
+		//calculate primary ray direction
+	glm::vec3 primaryRay(0, 0, 0);
+	primaryRay = *rayOrigin - intersectionPoint;
+		//normalise above vectors
+	reflectionLightRay = glm::normalize(reflectionLightRay);
+	primaryRay = glm::normalize(primaryRay);
+		//calculate specular
+	specular = mainLight->specular * mainLight->lightIntensity * float(pow(fmax(0, glm::dot(reflectionLightRay, primaryRay)), 128));
+	
+	
+	//all together now...  / add all lighting types together
+	if(diffuse.x > 0)
+		view[i][j] = ambient + diffuse  + specular;
+	else
+	{
+		view[i][j] = ambient + diffuse;
+	}
+}
+
+
+//could opptimise by calling in phong shader
+//if 0 is returned exit phong shader? 
+void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List *shapeList)
+{
+	//create light ray from point of intersection to the light source
+	glm::vec3 *shadowRayOrigin;
+	glm::vec3 shadowRayDir;
+
+	//calculate direction from intersection point to light source
+		//calculate distance vector
+	glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+		//calculate intersection point
+	glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
+		//light source - intersection point = direction to light source
+	shadowRayDir = glm::normalize(*mainLight->position - intersectionPoint);
+
+	//calculate shadow ray origin and add precision error correction
+		//get normal from shape at intersection point
+	glm::vec3 normal = glm::normalize(currentShape->getNormal(intersectionPoint));
+	shadowRayOrigin = &(intersectionPoint + (normal * float(1e-4)));
+
+	//check for intersections with spheres
+	for (int k = 0; k < shapeList->getLength(); k++)
+	{
+		Shape *currentShape = shapeList->getNode(k)->value;
+		if (currentShape->intersection(shadowRayOrigin, shadowRayDir))
+		{
+			view[i][j] = glm::vec3(0, 0, 0);
 		}
 	}
 }

@@ -10,6 +10,8 @@
 #include "Shape.h"
 #include "Sphere.h"
 #include "Plane.h"
+#include "Triangle.h"
+#include "Light.h"
 #include "List.h"
 #include <SDL.h>
 #include <stdio.h>
@@ -26,7 +28,7 @@ SDL_Event event = { 0 };
 int SCREEN_HEIGHT = 480;
 int SCREEN_WIDTH = 640;
 double ASPECT_RATIO = SCREEN_WIDTH / SCREEN_WIDTH;//image aspect ratio
-double FOV = 30.0 *ASPECT_RATIO; //field of view
+double FOV = 60.0 *ASPECT_RATIO; //field of view
 //position
 double posX = 0, posY = 0;
 
@@ -74,7 +76,7 @@ void scaleColour()
 //for single colour value
 float scaleColour(float colour)
 {
-	return (colour + 1) * 255;
+	return colour * 255;
 }
 
 void draw(SDL_Surface* screenSurface)
@@ -83,7 +85,7 @@ void draw(SDL_Surface* screenSurface)
 	{
 		for (unsigned x = 0; x < SCREEN_WIDTH; ++x)
 		{
-			setPixel(screenSurface, x, y, scaleColour(view[x][y].r), scaleColour(view[x][y].g), scaleColour(view[x][y].b));
+			setPixel(screenSurface, x, y, scaleColour(view[x][y].x), scaleColour(view[x][y].y), scaleColour(view[x][y].z));
 			//std::cout << "loop: " << x << "," << y << "," << view[x][y].r << "," << view[x][y].g << "," << view[x][y].b << std::endl;
 		}
 	}
@@ -184,21 +186,24 @@ int main(int argc, char* args[])
 	{
 		for (int j = 0; j < SCREEN_HEIGHT; j++)
 		{
-			view[i][j] = glm::vec3(255, 255, 255);
+			view[i][j] = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 	}
+	//set up light
+	Light *mainLight = new Light(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), 4, 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
 	//set up ray class
-	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV);
+	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV, mainLight);
 	//set up shapes
 	//spheres
-	//Shape *redSphere = new Sphere(new glm::vec3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, -20), glm::vec3(1.0f, 0.32f, 0.36f), 100);
 	Shape *redSphere = new Sphere(new glm::vec3(0, 0, -20), glm::vec3(1.0f, 0.32f, 0.36f), 4);
 	Shape *yellowSphere = new Sphere(new glm::vec3(5, -1, -15), glm::vec3(0.90f, 0.76f, 0.46f), 2);
 	Shape *blueSphere = new Sphere(new glm::vec3(5, 0, -25), glm::vec3(0.65f, 0.77f, 0.97f), 3);
 	Shape *greySphere = new Sphere(new glm::vec3(-5.5, 0, -15), glm::vec3(1.0f, 0.90f, 0.90f), 3);
 	//floor
-	Shape *floorSphere = new Sphere(new glm::vec3(0, -10004, -20), glm::vec3(0.2, 0.2, 0.2), 10000);
-	Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(0.2, 0.2, 0.2), new glm::vec3(0, 1, 0), 400, 400);
+	Shape *floorSphere = new Sphere(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), 10000);
+	//Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(0, 1, 0), 400, 400);
+	//random triangle...
+	Shape *triangle = new Triangle(new glm::vec3(-0.5, 0, -10), new glm::vec3(0.5, 0.5, -10), new glm::vec3(0.51, 0, -10), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	//add all shapes to linked list
 	List *shapeList = new List();
@@ -206,8 +211,9 @@ int main(int argc, char* args[])
 	shapeList->insert(shapeList->tail, new Node(yellowSphere));
 	shapeList->insert(shapeList->tail, new Node(blueSphere));
 	shapeList->insert(shapeList->tail, new Node(greySphere));
-	shapeList->insert(shapeList->tail, new Node(floorPlane));
-
+	shapeList->insert(shapeList->tail, new Node(floorSphere));
+	//shapeList->insert(shapeList->tail, new Node(floorPlane));
+	//shapeList->insert(shapeList->tail, new Node(triangle));
 
 	//initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
