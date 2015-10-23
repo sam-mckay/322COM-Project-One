@@ -15,6 +15,16 @@ RayCasting::RayCasting(int width, int height, double aspect, double fov, Light *
 	mainLight = light;
 }
 
+RayCasting::RayCasting(int width, int height, double aspect, double fov, AreaLight *light)
+{
+	SCREEN_WIDTH = width;
+	SCREEN_HEIGHT = height;
+	ASPECT_RATIO = aspect;
+	FOV = fov;
+	areaLight = light;
+}
+
+
 
 //deconstructor
 RayCasting::~RayCasting()
@@ -24,8 +34,9 @@ RayCasting::~RayCasting()
 
 
 //ray casting
-void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec3 **view, List *shapeList)
+void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec3 **view, List<Shape> *shapeList, SDL_Surface* screenSurface)
 {
+	//std::cout << "RAY CAST" << std::endl;
 	for (int i = 0; i < SCREEN_WIDTH; i++)
 	{
 		for (int j = 0; j < SCREEN_HEIGHT; j++)
@@ -72,13 +83,16 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 						view[i][j].y = colour.g;
 						view[i][j].z = colour.b;
 						prevDist = currentShape->t;
-						hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList);
+						//hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList);
+						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 4);
 						if (view[i][j].x != 0 && view[i][j].y != 0 && view[i][j].z != 0)
-							phongShading(view, i ,j, currentShape, rayOrigin, rayDir);
-						
+						{
+							phongShading(view, i, j, currentShape, rayOrigin, rayDir);
+						}	
 					}
 				}
 			}
+			setPixel(screenSurface, i, j, scaleColour(view[i][j].x), scaleColour(view[i][j].y), scaleColour(view[i][j].z));
 		}
 	}
 }
@@ -86,12 +100,13 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 //calculate phong shading for lighting
 void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir)
 {
+	
 	//
 	//
 	//ambient lighting
 	//
 	//
-	glm::vec3 ambient = mainLight->ambient * view[i][j] * mainLight->lightIntensity;
+	glm::vec3 ambient = areaLight->ambient * view[i][j] * areaLight->lightIntensity;
 
 	//
 	//
@@ -102,14 +117,14 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 		//calculate intersection point
 	glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
 		//calculate lightRay and normals
-	glm::vec3 lightRay = *mainLight->position - intersectionPoint;
+	glm::vec3 lightRay = *areaLight->position - intersectionPoint;
 	//glm::vec3 normal = intersectionPoint - *currentShape->position;
 	glm::vec3 normal = currentShape->getNormal(intersectionPoint);
 		//normalize
 	lightRay = glm::normalize(lightRay);
 	normal= glm::normalize(normal);
 		//calculate diffuse
-	glm::vec3 diffuse = view[i][j] * mainLight->diffuse * mainLight->lightIntensity * float(fmax(0, glm::dot(lightRay, normal)));
+	glm::vec3 diffuse = view[i][j] * areaLight->diffuse * areaLight->lightIntensity * float(fmax(0, glm::dot(lightRay, normal)));
 
 	//
 	//
@@ -128,7 +143,7 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 	reflectionLightRay = glm::normalize(reflectionLightRay);
 	primaryRay = glm::normalize(primaryRay);
 		//calculate specular
-	specular = mainLight->specular * mainLight->lightIntensity * float(pow(fmax(0, glm::dot(reflectionLightRay, primaryRay)), 128));
+	specular = areaLight->specular * areaLight->lightIntensity * float(pow(fmax(0, glm::dot(reflectionLightRay, primaryRay)), 128));
 	
 	
 	//all together now...  / add all lighting types together
@@ -143,7 +158,7 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 
 //could opptimise by calling in phong shader
 //if 0 is returned exit phong shader? 
-void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List *shapeList)
+void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList)
 {
 	//create light ray from point of intersection to the light source
 	glm::vec3 *shadowRayOrigin;
@@ -171,4 +186,71 @@ void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 			view[i][j] = glm::vec3(0, 0, 0);
 		}
 	}
+}
+
+
+void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, int samples)
+{
+	int hitCount = 0;
+	for (int k = 0; k < samples*samples; k++)
+	{
+		bool hit = false;
+		//create light ray from point of intersection to the light source
+		glm::vec3 *shadowRayOrigin;
+		glm::vec3 shadowRayDir;
+
+		//calculate direction from intersection point to light source
+		//calculate distance vector
+		glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+		//calculate intersection point
+		glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
+		//light source - intersection point = direction to point on light source
+		List<glm::vec3> *currentPosOnLight = areaLight->samplePointList;
+		shadowRayDir = glm::normalize(*currentPosOnLight->getNode(k)->value - intersectionPoint);
+
+		//calculate shadow ray origin and add precision error correction
+		//get normal from shape at intersection point
+		glm::vec3 normal = glm::normalize(currentShape->getNormal(intersectionPoint));
+		shadowRayOrigin = &(intersectionPoint + (normal * float(1e-4)));
+
+		//check for intersections with spheres
+		for (int k = 0; k < shapeList->getLength(); k++)
+		{
+			Shape *currentShape = shapeList->getNode(k)->value;
+			if (currentShape->intersection(shadowRayOrigin, shadowRayDir))
+			{
+				hit = true;
+				hitCount += 1;
+				//break;
+			}
+		}
+	}
+	//std::cout << "Hit count: " << hitCount << std::endl;
+	view[i][j].x -= ((view[i][j].x / pow(samples, 2)) * hitCount);
+	view[i][j].y -= ((view[i][j].y / pow(samples, 2)) * hitCount);
+	view[i][j].z -= ((view[i][j].z / pow(samples, 2)) * hitCount);
+}
+
+//drawPixel
+bool::RayCasting::setPixel(SDL_Surface* screenSurface, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+
+	Uint32 colour;
+	colour = SDL_MapRGB(screenSurface->format, r, g, b);
+
+	Uint32 *pixelMemory32;
+	pixelMemory32 = (Uint32*)screenSurface->pixels + y * screenSurface->pitch / 4 + x;
+	*pixelMemory32 = colour;
+
+	return 1;
+}
+
+float::RayCasting::scaleColour(float colour)
+{
+	float c = colour * 255;
+	if (c < 0)
+	{
+		c = 0;
+	}
+	return c;
 }

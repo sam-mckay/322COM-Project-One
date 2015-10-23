@@ -82,6 +82,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AreaLight.cpp" />
+    <ClCompile Include="Box.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="List.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -93,6 +95,8 @@
     <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AreaLight.h" />
+    <ClInclude Include="Box.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="Node.h" />

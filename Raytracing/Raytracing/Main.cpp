@@ -11,7 +11,9 @@
 #include "Sphere.h"
 #include "Plane.h"
 #include "Triangle.h"
+#include "Box.h"
 #include "Light.h"
+#include "AreaLight.h"
 #include "List.h"
 #include <SDL.h>
 #include <stdio.h>
@@ -20,7 +22,8 @@
 typedef std::chrono::high_resolution_clock Clock;
 Clock::time_point prevTime;
 Clock::time_point currentTime;
-
+int fpsCount = 0;
+double frameTimeThisSec =0;
 //SDL Set up
 Uint8* inkeys;
 SDL_Event event = { 0 };
@@ -85,7 +88,7 @@ void draw(SDL_Surface* screenSurface)
 	{
 		for (unsigned x = 0; x < SCREEN_WIDTH; ++x)
 		{
-			setPixel(screenSurface, x, y, scaleColour(view[x][y].x), scaleColour(view[x][y].y), scaleColour(view[x][y].z));
+			//setPixel(screenSurface, x, y, scaleColour(view[x][y].x), scaleColour(view[x][y].y), scaleColour(view[x][y].z));
 			//std::cout << "loop: " << x << "," << y << "," << view[x][y].r << "," << view[x][y].g << "," << view[x][y].b << std::endl;
 		}
 	}
@@ -191,8 +194,9 @@ int main(int argc, char* args[])
 	}
 	//set up light
 	Light *mainLight = new Light(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), 4, 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
+	AreaLight *areaLight = new AreaLight(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(6, 6, 6), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
 	//set up ray class
-	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV, mainLight);
+	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV, areaLight);
 	//set up shapes
 	//spheres
 	Shape *redSphere = new Sphere(new glm::vec3(0, 0, -20), glm::vec3(1.0f, 0.32f, 0.36f), 4);
@@ -204,16 +208,18 @@ int main(int argc, char* args[])
 	//Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(0, 1, 0), 400, 400);
 	//random triangle...
 	Shape *triangle = new Triangle(new glm::vec3(-0.5, 0, -10), new glm::vec3(0.5, 0.5, -10), new glm::vec3(0.51, 0, -10), glm::vec3(0.0f, 0.0f, 1.0f));
-
+	//cube
+	Shape *box = new Box(new glm::vec3(-0.5, -3, -10), glm::vec3(0.4f, 0.4f, 0.87f), new glm::vec3(1.0, 1.0, 1.5));
 	//add all shapes to linked list
-	List *shapeList = new List();
-	shapeList->insert(shapeList->head, new Node(redSphere));
-	shapeList->insert(shapeList->tail, new Node(yellowSphere));
-	shapeList->insert(shapeList->tail, new Node(blueSphere));
-	shapeList->insert(shapeList->tail, new Node(greySphere));
-	shapeList->insert(shapeList->tail, new Node(floorSphere));
+	List<Shape> *shapeList = new List<Shape>();
+	shapeList->insert(shapeList->head, new Node<Shape>(redSphere));
+	shapeList->insert(shapeList->tail, new Node<Shape>(yellowSphere));
+	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere));
+	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere));
+	shapeList->insert(shapeList->tail, new Node<Shape>(floorSphere));
 	//shapeList->insert(shapeList->tail, new Node(floorPlane));
 	//shapeList->insert(shapeList->tail, new Node(triangle));
+	shapeList->insert(shapeList->tail, new Node<Shape>(box));
 
 	//initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -239,16 +245,24 @@ int main(int argc, char* args[])
 				//calculate intersections
 					//temp method
 				//cast Ray
-				rayCaster->castRay(rayOrigin, cameraSpace, view, shapeList);
+				rayCaster->castRay(rayOrigin, cameraSpace, view, shapeList, screenSurface);
 
-				draw(screenSurface);
+				//draw(screenSurface);
 
 
 				//update time and window
 				prevTime = currentTime;
 				currentTime = Clock::now();
 				int frameTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
-				std::cout << "Time to render frame in milliseconds: " << frameTime * 0.0000001 << std::endl;
+				fpsCount++;
+				frameTimeThisSec += (frameTime * 0.000001);
+				if (frameTimeThisSec >= 1000.0f)
+				{
+					std::cout << "Frames Per Second: " << fpsCount << " Average Frame Time: " << frameTimeThisSec/fpsCount*0.1 << std::endl;
+					fpsCount = 0;
+					frameTimeThisSec = 0;
+				}
+				std::cout << "Time to render frame in Seconds: " << frameTime * 0.000000001 << std::endl;
 				SDL_UpdateWindowSurface(window);
 			}
 		}
