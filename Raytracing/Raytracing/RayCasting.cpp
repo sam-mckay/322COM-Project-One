@@ -1,5 +1,5 @@
 ﻿#include "RayCasting.h"
-
+#include <ppl.h>
 //constructor
 RayCasting::RayCasting()
 {
@@ -36,8 +36,10 @@ RayCasting::~RayCasting()
 //ray casting
 void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec3 **view, List<Shape> *shapeList, SDL_Surface* screenSurface)
 {
+	SDL_FillRect(screenSurface, NULL, 0x000000);
 	//std::cout << "RAY CAST" << std::endl;
-	for (int i = 0; i < SCREEN_WIDTH; i++)
+	//for (int i = 0; i < SCREEN_WIDTH; i++)
+	concurrency::parallel_for(int(0), SCREEN_WIDTH, [&](int i)
 	{
 		for (int j = 0; j < SCREEN_HEIGHT; j++)
 		{
@@ -69,36 +71,38 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 
 			double prevShape = 1;
 			double prevDist = -1;
+			double currentDist = INFINITY;
 
 			for (int k = 0; k < shapeList->getLength(); k++)
 			{
 				Shape *currentShape = shapeList->getNode(k)->value;
 				//std::cout << "LOOP: " << k << std::endl;
-				if (currentShape->intersection(rayOrigin, rayDir))
+				if (currentShape->intersection(rayOrigin, rayDir, &currentDist))
 				{
-					if (prevDist == -1 || (prevDist > 0 && currentShape->t < prevDist))
+					if (prevDist == -1 || (prevDist > 0 && currentDist < prevDist))
 					{
 						glm::vec3 colour = currentShape->colour;
 						view[i][j].x = colour.r;
 						view[i][j].y = colour.g;
 						view[i][j].z = colour.b;
-						prevDist = currentShape->t;
-						//hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList);
-						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 4);
+						prevDist = currentDist;
+						//hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, currentDist);
+						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 4, currentDist);
 						if (view[i][j].x != 0 && view[i][j].y != 0 && view[i][j].z != 0)
 						{
-							phongShading(view, i, j, currentShape, rayOrigin, rayDir);
-						}	
+							phongShading(view, i, j, currentShape, rayOrigin, rayDir, currentDist);
+						}
 					}
 				}
 			}
 			setPixel(screenSurface, i, j, scaleColour(view[i][j].x), scaleColour(view[i][j].y), scaleColour(view[i][j].z));
 		}
-	}
+	//}
+	});
 }
 
 //calculate phong shading for lighting
-void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir)
+void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, double currentDist)
 {
 	
 	//
@@ -113,7 +117,7 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 	//diffuse lighting
 	//
 	//
-	glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+	glm::vec3 distanceVec(currentDist, currentDist, currentDist);
 		//calculate intersection point
 	glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
 		//calculate lightRay and normals
@@ -158,7 +162,7 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 
 //could opptimise by calling in phong shader
 //if 0 is returned exit phong shader? 
-void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList)
+void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, double distance)
 {
 	//create light ray from point of intersection to the light source
 	glm::vec3 *shadowRayOrigin;
@@ -166,7 +170,7 @@ void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 
 	//calculate direction from intersection point to light source
 		//calculate distance vector
-	glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+	glm::vec3 distanceVec(distance, distance, distance);
 		//calculate intersection point
 	glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
 		//light source - intersection point = direction to light source
@@ -181,7 +185,7 @@ void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 	for (int k = 0; k < shapeList->getLength(); k++)
 	{
 		Shape *currentShape = shapeList->getNode(k)->value;
-		if (currentShape->intersection(shadowRayOrigin, shadowRayDir))
+		if (currentShape->intersection(shadowRayOrigin, shadowRayDir, &distance))
 		{
 			view[i][j] = glm::vec3(0, 0, 0);
 		}
@@ -189,19 +193,20 @@ void::RayCasting::hardShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 }
 
 
-void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, int samples)
+void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, int samples, double distance)
 {
 	int hitCount = 0;
-	for (int k = 0; k < samples*samples; k++)
+	//create light ray from point of intersection to the light source
+	glm::vec3 *shadowRayOrigin;
+	glm::vec3 shadowRayDir;
+
+	//calculate direction from intersection point to light source
+	//calculate distance vector
+	glm::vec3 distanceVec(distance, distance, distance);
+	for (int k = 0; k < samples*samples; k++)	
 	{
 		bool hit = false;
-		//create light ray from point of intersection to the light source
-		glm::vec3 *shadowRayOrigin;
-		glm::vec3 shadowRayDir;
-
-		//calculate direction from intersection point to light source
-		//calculate distance vector
-		glm::vec3 distanceVec(currentShape->t, currentShape->t, currentShape->t);
+		
 		//calculate intersection point
 		glm::vec3 intersectionPoint = (distanceVec + *rayOrigin) * rayDir;
 		//light source - intersection point = direction to point on light source
@@ -217,11 +222,11 @@ void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 		for (int k = 0; k < shapeList->getLength(); k++)
 		{
 			Shape *currentShape = shapeList->getNode(k)->value;
-			if (currentShape->intersection(shadowRayOrigin, shadowRayDir))
+			if (currentShape->intersection(shadowRayOrigin, shadowRayDir, &distance))
 			{
 				hit = true;
 				hitCount += 1;
-				//break;
+				break;
 			}
 		}
 	}

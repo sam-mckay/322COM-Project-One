@@ -19,9 +19,9 @@ public:
 	RayCasting(int width, int height, double aspect, double FOV, AreaLight *mainLight);
 	~RayCasting();
 	void castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec3 **view, List<Shape> *shapeList, SDL_Surface* screenSurface);
-	void phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir);
-	void hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList);
-	void softShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, int samples);
+	void phongShading(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, double distance);
+	void hardShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, double distance);
+	void softShadows(glm::vec3 **view, int i, int j, Shape *currentShape, glm::vec3 *rayOrigin, glm::vec3 rayDir, List<Shape> *shapeList, int samples, double distance);
 private:
 	int SCREEN_WIDTH;
 	int SCREEN_HEIGHT;

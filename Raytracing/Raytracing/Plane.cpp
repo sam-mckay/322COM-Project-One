@@ -17,7 +17,7 @@ Plane::~Plane()
 {
 }
 
-bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
+bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance)
 {
 	//rayOrigin
 	//L0
@@ -47,7 +47,7 @@ bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
 	//t
 	double tPlaneDistance = 0-(planeDotNorm/rayDotNorm);
 
-	t = tPlaneDistance;
+	*distance = tPlaneDistance;
 
 	if (tPlaneDistance >= 0)
 	{

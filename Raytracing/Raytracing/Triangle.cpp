@@ -16,7 +16,7 @@ Triangle::~Triangle()
 {
 }
 
-bool::Triangle::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
+bool::Triangle::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance)
 {
 	//std::cout << "rayOrigin" << rayOrigin->x << "," << rayOrigin->y << "," << rayOrigin->z << std::endl;
 	
@@ -47,7 +47,7 @@ bool::Triangle::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
 
 	glm::vec3 *intersectionPoint = new glm::vec3((*point1)*float(u)+ (*point2)*float(v)+ (*point3)*float(w));
 	
-	t = glm::distance(*intersectionPoint, *rayOrigin);
+	*distance = glm::distance(*intersectionPoint, *rayOrigin);
 
 	//check if point is in unit triangle
 	// 0 <= u,v,w <= 1

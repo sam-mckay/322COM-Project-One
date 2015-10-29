@@ -14,7 +14,7 @@ Box::~Box()
 {
 }
 
-bool::Box::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
+bool::Box::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance)
 {
 	double t1;
 	double t2;

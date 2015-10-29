@@ -33,7 +33,7 @@ int SCREEN_WIDTH = 640;
 double ASPECT_RATIO = SCREEN_WIDTH / SCREEN_WIDTH;//image aspect ratio
 double FOV = 60.0 *ASPECT_RATIO; //field of view
 //position
-double posX = 0, posY = 0;
+double posX = 0, posY = 0, posZ = 0;
 
 
 //view array
@@ -167,6 +167,32 @@ bool done(bool quit_if_esc, bool delay) //delay makes CPU have some free time, u
 	return done;
 }
 
+void move()
+{
+	if (event.type == SDL_KEYDOWN)
+	{
+		switch (event.key.keysym.sym)
+		{
+		case SDLK_UP:
+			posZ += 0.01;
+			break;
+		case SDLK_DOWN:
+			posZ -= 0.01;
+			break;
+		case SDLK_LEFT:
+			posX -= 0.01;
+			break;
+		case SDLK_RIGHT:
+			posX += 0.01;
+			break;
+		default:
+			break;
+		}
+	}
+
+	*rayOrigin = glm::vec3(rayOrigin->x + posX, rayOrigin->y, rayOrigin->z + posZ);
+}
+
 //main function
 int main(int argc, char* args[])
 {
@@ -194,7 +220,8 @@ int main(int argc, char* args[])
 	}
 	//set up light
 	Light *mainLight = new Light(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), 4, 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
-	AreaLight *areaLight = new AreaLight(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(6, 6, 6), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
+	//AreaLight *areaLight = new AreaLight(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(6, 6, 6), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
+	AreaLight *areaLight = new AreaLight(new glm::vec3(20, 20, -5), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(12, 12, 12), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
 	//set up ray class
 	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV, areaLight);
 	//set up shapes
@@ -248,21 +275,22 @@ int main(int argc, char* args[])
 				rayCaster->castRay(rayOrigin, cameraSpace, view, shapeList, screenSurface);
 
 				//draw(screenSurface);
-
+				move(screenSurface);
+				
 
 				//update time and window
 				prevTime = currentTime;
 				currentTime = Clock::now();
-				int frameTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
+				double frameTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
 				fpsCount++;
-				frameTimeThisSec += (frameTime * 0.000001);
-				if (frameTimeThisSec >= 1000.0f)
+				frameTimeThisSec += (frameTime / 1000000);
+				if (frameTimeThisSec >= 1000)
 				{
-					std::cout << "Frames Per Second: " << fpsCount << " Average Frame Time: " << frameTimeThisSec/fpsCount*0.1 << std::endl;
+					std::cout << "Frames Per Second: " << fpsCount << " Average Frame Time: " << frameTimeThisSec/fpsCount << std::endl;
 					fpsCount = 0;
 					frameTimeThisSec = 0;
 				}
-				std::cout << "Time to render frame in Seconds: " << frameTime * 0.000000001 << std::endl;
+				std::cout << "Time to render frame in Seconds: " << frameTime / 1000000  << std::endl;
 				SDL_UpdateWindowSurface(window);
 			}
 		}

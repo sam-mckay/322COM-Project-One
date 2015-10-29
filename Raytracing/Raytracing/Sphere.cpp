@@ -15,7 +15,7 @@ Sphere::~Sphere()
 {
 }
 
-bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir) 
+bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance)
 {
 	//std::cout << "RAY SPHERE INTERSECTION: POS: " << position->x << "," << position->y << "," << position->y <<
 	//	" RAY: " << rayOrigin->x << "," << rayOrigin->y << "," << rayOrigin->y << std::endl;
@@ -65,12 +65,12 @@ bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir)
 
 	if (rayDistance - distanceToSphereEdge < rayDistance + distanceToSphereEdge)
 	{
-		t = rayDistance - distanceToSphereEdge;
+		*distance = rayDistance - distanceToSphereEdge;
 		//std::cout << "Sphere T: " << t << std::endl;
 	}
 	else
 	{
-		t = rayDistance + distanceToSphereEdge;
+		*distance = rayDistance + distanceToSphereEdge;
 		//std::cout << "Sphere T: " << t << std::endl;
 	}
 

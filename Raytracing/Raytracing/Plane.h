@@ -10,7 +10,7 @@ public:
 	//properties
 	double width, height;
 	glm::vec3 *normal;
-	bool intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir);
+	bool intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance);
 	glm::vec3 getNormal(glm::vec3 intersectionPoint);
 };
 
