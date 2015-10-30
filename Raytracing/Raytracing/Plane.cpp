@@ -61,5 +61,6 @@ bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distan
 
 glm::vec3 Plane::getNormal(glm::vec3 intersectionPoint)
 {
+	//std::cout << normal->x << "," << normal->y << "," << normal->z << std::endl;
 	return *normal;
 }

@@ -54,6 +54,9 @@ bool::Box::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance
 	glm::vec3 p2 = *rayOrigin + rayDir * intersectionDist.y;
 	glm::vec3 p3 = *rayOrigin + rayDir * intersectionDist.z;
 
+	//*distance = double(glm::distance(*rayOrigin, intersectionDist));
+	*distance = double(glm::distance(*rayOrigin, *position));
+
 	//check intersection point lies on cube face
 	if (p1.x > (position->x - epsilon) && p1.x < (farPosPoint.x + epsilon) &&
 		p1.y > (position->y - epsilon) && p1.y < (farPosPoint.y + epsilon) &&
@@ -77,11 +80,13 @@ bool::Box::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distance
 		return true;
 	}
 	//std::cout << "FAIL 2" << std::endl;
+
 	return false;
 }
 
 glm::vec3 Box::getNormal(glm::vec3 intersectionPoint)
 {
-	return intersectionPoint;
+
+	return glm::vec3(1,0,0);
 }
 

@@ -36,9 +36,17 @@ RayCasting::~RayCasting()
 //ray casting
 void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec3 **view, List<Shape> *shapeList, SDL_Surface* screenSurface)
 {
-	SDL_FillRect(screenSurface, NULL, 0x000000);
+	//SDL_FillRect(screenSurface, NULL, 0x000000);
 	//std::cout << "RAY CAST" << std::endl;
-	//for (int i = 0; i < SCREEN_WIDTH; i++)
+	SDL_FillRect(screenSurface, NULL, 0x000000);
+
+	for (int i = 0; i < SCREEN_WIDTH; i++)
+	{
+		for (int j = 0; j < SCREEN_HEIGHT; j++)
+		{
+			view[i][j] = glm::vec3(1.0f, 1.0f, 1.0f);
+		}
+	}
 	concurrency::parallel_for(int(0), SCREEN_WIDTH, [&](int i)
 	{
 		for (int j = 0; j < SCREEN_HEIGHT; j++)
@@ -57,10 +65,13 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 			//std::cout << "camera : " << cameraX << ", " << cameraY << std::endl;
 
 			//represent camera position as vector
-			cameraSpace = new glm::vec3(cameraX, cameraY, -1);
+			glm::vec3 cameraTest;
+			cameraTest.x = cameraX;
+			cameraTest.y = cameraY;
+			cameraTest.z = -1;
 
 			//calculate ray
-			glm::vec3 rayDir = *cameraSpace - *rayOrigin;
+			glm::vec3 rayDir = cameraTest - *rayOrigin;
 			rayDir = glm::normalize(rayDir);
 			//represent rays as colour - debug
 			/*
@@ -87,7 +98,7 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 						view[i][j].z = colour.b;
 						prevDist = currentDist;
 						//hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, currentDist);
-						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 4, currentDist);
+						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 1, currentDist);
 						if (view[i][j].x != 0 && view[i][j].y != 0 && view[i][j].z != 0)
 						{
 							phongShading(view, i, j, currentShape, rayOrigin, rayDir, currentDist);
@@ -151,8 +162,10 @@ void::RayCasting::phongShading(glm::vec3 **view, int i, int j, Shape *currentSha
 	
 	
 	//all together now...  / add all lighting types together
-	if(diffuse.x > 0)
+	if (diffuse.x > 0)
+	{
 		view[i][j] = ambient + diffuse  + specular;
+	}
 	else
 	{
 		view[i][j] = ambient + diffuse;
@@ -216,7 +229,8 @@ void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 		//calculate shadow ray origin and add precision error correction
 		//get normal from shape at intersection point
 		glm::vec3 normal = glm::normalize(currentShape->getNormal(intersectionPoint));
-		shadowRayOrigin = &(intersectionPoint + (normal * float(1e-4)));
+		//glm::vec3 normal = currentShape->getNormal(intersectionPoint);
+		shadowRayOrigin = &(intersectionPoint + (normal * float(0.1)));
 
 		//check for intersections with spheres
 		for (int k = 0; k < shapeList->getLength(); k++)

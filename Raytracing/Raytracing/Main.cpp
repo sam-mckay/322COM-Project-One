@@ -43,6 +43,8 @@ glm::vec3 *cameraSpace;
 //ray origin arry
 glm::vec3 *rayOrigin;
 
+//init funcs
+void move();
 
 //draws a single pixel to the screen
 bool setPixel(SDL_Surface* surface, int x, int y, Uint8 r, Uint8 g, Uint8 b)
@@ -84,14 +86,8 @@ float scaleColour(float colour)
 
 void draw(SDL_Surface* screenSurface)
 {
-	for (unsigned y = 0; y < SCREEN_HEIGHT; ++y)
-	{
-		for (unsigned x = 0; x < SCREEN_WIDTH; ++x)
-		{
-			//setPixel(screenSurface, x, y, scaleColour(view[x][y].x), scaleColour(view[x][y].y), scaleColour(view[x][y].z));
-			//std::cout << "loop: " << x << "," << y << "," << view[x][y].r << "," << view[x][y].g << "," << view[x][y].b << std::endl;
-		}
-	}
+	
+	move();
 }
 
 
@@ -171,6 +167,8 @@ void move()
 {
 	if (event.type == SDL_KEYDOWN)
 	{
+		posX = 0;
+		posZ = 0;
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_UP:
@@ -180,17 +178,35 @@ void move()
 			posZ -= 0.01;
 			break;
 		case SDLK_LEFT:
-			posX -= 0.01;
+			posX += 0.01;
 			break;
 		case SDLK_RIGHT:
-			posX += 0.01;
+			posX -= 0.01;
 			break;
 		default:
 			break;
 		}
+		*rayOrigin = glm::vec3(rayOrigin->x + posX, rayOrigin->y, rayOrigin->z + posZ);
 	}
 
-	*rayOrigin = glm::vec3(rayOrigin->x + posX, rayOrigin->y, rayOrigin->z + posZ);
+	
+}
+
+//update time and window
+void updateTimer()
+{
+	prevTime = currentTime;
+	currentTime = Clock::now();
+	double frameTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
+	fpsCount++;
+	frameTimeThisSec += (frameTime / 1000000);
+	if (frameTimeThisSec >= 1000)
+	{
+		std::cout << "Frames Per Second: " << fpsCount << " Average Frame Time: " << frameTimeThisSec / fpsCount << std::endl;
+		fpsCount = 0;
+		frameTimeThisSec = 0;
+	}
+	//std::cout << "Time to render frame in Seconds: " << frameTime / 1000000 << std::endl;
 }
 
 //main function
@@ -239,14 +255,15 @@ int main(int argc, char* args[])
 	Shape *box = new Box(new glm::vec3(-0.5, -3, -10), glm::vec3(0.4f, 0.4f, 0.87f), new glm::vec3(1.0, 1.0, 1.5));
 	//add all shapes to linked list
 	List<Shape> *shapeList = new List<Shape>();
-	shapeList->insert(shapeList->head, new Node<Shape>(redSphere));
+	//shapeList->insert(shapeList->head, new Node<Shape>(redSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(yellowSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(floorSphere));
-	//shapeList->insert(shapeList->tail, new Node(floorPlane));
+	//shapeList->insert(shapeList->tail, new Node<Shape>(floorPlane));
 	//shapeList->insert(shapeList->tail, new Node(triangle));
 	shapeList->insert(shapeList->tail, new Node<Shape>(box));
+	cameraSpace = new glm::vec3(0.0f, 0.0f, 0.0f);
 
 	//initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -268,34 +285,24 @@ int main(int argc, char* args[])
 			while (!done(true, false))
 			{
 				SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x00));
-
+				//SDL_FillRect(screenSurface, NULL, 0x000000);
 				//calculate intersections
-					//temp method
-				//cast Ray
+					//cast Ray
 				rayCaster->castRay(rayOrigin, cameraSpace, view, shapeList, screenSurface);
 
-				//draw(screenSurface);
-				move(screenSurface);
+				draw(screenSurface);
 				
-
+				//move();
+				
 				//update time and window
-				prevTime = currentTime;
-				currentTime = Clock::now();
-				double frameTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
-				fpsCount++;
-				frameTimeThisSec += (frameTime / 1000000);
-				if (frameTimeThisSec >= 1000)
-				{
-					std::cout << "Frames Per Second: " << fpsCount << " Average Frame Time: " << frameTimeThisSec/fpsCount << std::endl;
-					fpsCount = 0;
-					frameTimeThisSec = 0;
-				}
-				std::cout << "Time to render frame in Seconds: " << frameTime / 1000000  << std::endl;
+				updateTimer();
+
 				SDL_UpdateWindowSurface(window);
 			}
 		}
 	}
 
+	delete cameraSpace;
 	//destroy the window
 	SDL_DestroyWindow(window);
 
