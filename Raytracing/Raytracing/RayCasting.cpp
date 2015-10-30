@@ -98,7 +98,7 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 						view[i][j].z = colour.b;
 						prevDist = currentDist;
 						//hardShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, currentDist);
-						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 1, currentDist);
+						softShadows(view, i, j, currentShape, rayOrigin, rayDir, shapeList, 4, currentDist);
 						if (view[i][j].x != 0 && view[i][j].y != 0 && view[i][j].z != 0)
 						{
 							phongShading(view, i, j, currentShape, rayOrigin, rayDir, currentDist);

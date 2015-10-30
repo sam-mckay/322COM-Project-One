@@ -11,7 +11,7 @@ AreaLight::AreaLight(glm::vec3 *position, glm::vec3 colour, glm::vec3 *size, flo
 	ambient = a;
 	diffuse = d;
 	specular = s;
-	samplingPoints(1);
+	samplingPoints(16);
 }
 
 

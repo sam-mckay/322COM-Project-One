@@ -237,7 +237,7 @@ int main(int argc, char* args[])
 	//set up light
 	Light *mainLight = new Light(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), 4, 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
 	//AreaLight *areaLight = new AreaLight(new glm::vec3(0, 20, 0), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(6, 6, 6), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
-	AreaLight *areaLight = new AreaLight(new glm::vec3(20, 20, -5), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(12, 12, 12), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
+	AreaLight *areaLight = new AreaLight(new glm::vec3(20, 20, -5), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(8, 8, 8), 0.5f, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.9f, 0.9f, 0.9f), glm::vec3(0.7, 0.7f, 0.7f));
 	//set up ray class
 	RayCasting *rayCaster = new RayCasting(SCREEN_WIDTH, SCREEN_HEIGHT, ASPECT_RATIO, FOV, areaLight);
 	//set up shapes
@@ -246,6 +246,12 @@ int main(int argc, char* args[])
 	Shape *yellowSphere = new Sphere(new glm::vec3(5, -1, -15), glm::vec3(0.90f, 0.76f, 0.46f), 2);
 	Shape *blueSphere = new Sphere(new glm::vec3(5, 0, -25), glm::vec3(0.65f, 0.77f, 0.97f), 3);
 	Shape *greySphere = new Sphere(new glm::vec3(-5.5, 0, -15), glm::vec3(1.0f, 0.90f, 0.90f), 3);
+
+	Shape *redSphere2 = new Sphere(new glm::vec3(-5, 7, -20), glm::vec3(1.0f, 0.32f, 0.36f), 3);
+	Shape *yellowSphere2 = new Sphere(new glm::vec3(-3, -1, -5), glm::vec3(0.90f, 0.76f, 0.46f), 1);
+	Shape *blueSphere2 = new Sphere(new glm::vec3(2, -2, -7), glm::vec3(0.65f, 0.77f, 0.97f), 0.5);
+	Shape *greySphere2 = new Sphere(new glm::vec3(1, 1, -10), glm::vec3(1.0f, 0.90f, 0.90f), 1);
+
 	//floor
 	Shape *floorSphere = new Sphere(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), 10000);
 	//Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(0, 1, 0), 400, 400);
@@ -255,11 +261,18 @@ int main(int argc, char* args[])
 	Shape *box = new Box(new glm::vec3(-0.5, -3, -10), glm::vec3(0.4f, 0.4f, 0.87f), new glm::vec3(1.0, 1.0, 1.5));
 	//add all shapes to linked list
 	List<Shape> *shapeList = new List<Shape>();
-	//shapeList->insert(shapeList->head, new Node<Shape>(redSphere));
+	shapeList->insert(shapeList->head, new Node<Shape>(redSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(yellowSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere));
+
+	shapeList->insert(shapeList->head, new Node<Shape>(redSphere2));
+	shapeList->insert(shapeList->tail, new Node<Shape>(yellowSphere2));
+	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere2));
+	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere2));
+
 	shapeList->insert(shapeList->tail, new Node<Shape>(floorSphere));
+
 	//shapeList->insert(shapeList->tail, new Node<Shape>(floorPlane));
 	//shapeList->insert(shapeList->tail, new Node(triangle));
 	shapeList->insert(shapeList->tail, new Node<Shape>(box));
