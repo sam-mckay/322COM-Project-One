@@ -30,7 +30,7 @@ SDL_Event event = { 0 };
 //screen statics
 int SCREEN_HEIGHT = 480;
 int SCREEN_WIDTH = 640;
-double ASPECT_RATIO = SCREEN_WIDTH / SCREEN_WIDTH;//image aspect ratio
+double  ASPECT_RATIO = SCREEN_WIDTH / SCREEN_WIDTH;//image aspect ratio
 double FOV = 60.0 *ASPECT_RATIO; //field of view
 //position
 double posX = 0, posY = 0, posZ = 0;
@@ -60,22 +60,7 @@ bool setPixel(SDL_Surface* surface, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 	return 1;
 }
 
-//scales colour value from index to rgb 0-255
-//for all - old - no longer useful
-/*
-void scaleColour()
-{
-	for (unsigned y = 0; y < SCREEN_HEIGHT; ++y)
-	{
-		for (unsigned x = 0; x < SCREEN_WIDTH; ++x)
-		{
-			view[x][y].r = (view[x][y].r+1)*255;
-			view[x][y].g = (view[x][y].g + 1) * 255;
-			view[x][y].b = (view[x][y].b + 1) * 255;
-		}
-	}
-}
-*/
+
 
 //scales colour value from index to rgb 0-255
 //for single colour value
@@ -92,6 +77,7 @@ void draw(SDL_Surface* screenSurface)
 
 
 //saves the current draw view array to an image file
+/*
 void saveToFile()
 {
 	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
@@ -106,16 +92,16 @@ void saveToFile()
 		}
 	}
 	ofs.close();
-}
+}*/
 
 
 
-double convertToRad(double deg)
+float convertToRad(float deg)
 {
 	return (deg*M_PI) / 180;
 }
 
-double convertToDeg(double rad)
+float convertToDeg(float rad)
 {
 	return rad*(180 / M_PI);
 }
@@ -138,13 +124,13 @@ void printArray()
 bool done(bool quit_if_esc, bool delay) //delay makes CPU have some free time, use once per frame to avoid 100% usage of a CPU core
 {
 	if (delay) SDL_Delay(5); //so it consumes less processing power
-	int done = 0;
-	if (!SDL_PollEvent(&event)) return 0;
+	bool done = false;
+	if (!SDL_PollEvent(&event)) return false;
 	// read keys
 	// User requests quit
 	if (event.type == SDL_QUIT)
 	{
-		done = 1;
+		done = true;
 	}
 	//User presses a key
 	else if (event.type == SDL_KEYDOWN)
@@ -153,7 +139,7 @@ bool done(bool quit_if_esc, bool delay) //delay makes CPU have some free time, u
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_ESCAPE:
-			done = 1;
+			done = true;
 			break;
 
 		default:
@@ -256,7 +242,7 @@ int main(int argc, char* args[])
 	Shape *floorSphere = new Sphere(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), 10000);
 	//Shape *floorPlane = new Plane(new glm::vec3(0, -10004, -20), glm::vec3(1.0f, 1.0f, 1.0f), new glm::vec3(0, 1, 0), 400, 400);
 	//random triangle...
-	Shape *triangle = new Triangle(new glm::vec3(-0.5, 0, -10), new glm::vec3(0.5, 0.5, -10), new glm::vec3(0.51, 0, -10), glm::vec3(0.0f, 0.0f, 1.0f));
+	Shape *triangle = new Triangle(new glm::vec3(5, -2.0, -5), new glm::vec3(4.5, -2, -10), new glm::vec3(4, -2.0f, -5), glm::vec3(0.0f, 0.0f, 1.0f));
 	//cube
 	Shape *box = new Box(new glm::vec3(-0.5, -3, -10), glm::vec3(0.4f, 0.4f, 0.87f), new glm::vec3(1.0, 1.0, 1.5));
 	//add all shapes to linked list
@@ -266,15 +252,16 @@ int main(int argc, char* args[])
 	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere));
 	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere));
 
+	
 	shapeList->insert(shapeList->head, new Node<Shape>(redSphere2));
 	shapeList->insert(shapeList->tail, new Node<Shape>(yellowSphere2));
 	shapeList->insert(shapeList->tail, new Node<Shape>(blueSphere2));
 	shapeList->insert(shapeList->tail, new Node<Shape>(greySphere2));
-
+	
 	shapeList->insert(shapeList->tail, new Node<Shape>(floorSphere));
 
 	//shapeList->insert(shapeList->tail, new Node<Shape>(floorPlane));
-	//shapeList->insert(shapeList->tail, new Node(triangle));
+	shapeList->insert(shapeList->tail, new Node<Shape>(triangle));
 	shapeList->insert(shapeList->tail, new Node<Shape>(box));
 	cameraSpace = new glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -323,7 +310,7 @@ int main(int argc, char* args[])
 	SDL_Quit();
 
 	//save to an image file	
-	saveToFile();
+	//saveToFile();
 	//printArray();
 
 

@@ -26,7 +26,7 @@ private:
 	int SCREEN_WIDTH;
 	int SCREEN_HEIGHT;
 	double ASPECT_RATIO;
-	double FOV;
+	float FOV;
 	Light *mainLight;
 	AreaLight *areaLight;
 	List<glm::vec3> *samplePointList;

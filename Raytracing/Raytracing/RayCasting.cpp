@@ -40,28 +40,23 @@ void::RayCasting::castRay(glm::vec3 *rayOrigin, glm::vec3 *cameraSpace, glm::vec
 	//std::cout << "RAY CAST" << std::endl;
 	SDL_FillRect(screenSurface, NULL, 0x000000);
 
-	for (int i = 0; i < SCREEN_WIDTH; i++)
-	{
-		for (int j = 0; j < SCREEN_HEIGHT; j++)
-		{
-			view[i][j] = glm::vec3(1.0f, 1.0f, 1.0f);
-		}
-	}
+	
 	concurrency::parallel_for(int(0), SCREEN_WIDTH, [&](int i)
 	{
 		for (int j = 0; j < SCREEN_HEIGHT; j++)
 		{
+			view[i][j] = glm::vec3(1.0f, 1.0f, 1.0f);
 			//normalise pixel position to range 0:1
 			double pixelNormalisedX = (i + 0.5) / SCREEN_WIDTH;
-			double pixelNormalisedY = (j + 0.5) / SCREEN_HEIGHT;
+			double pixelNormalisedY = (j + 0.5f) / SCREEN_HEIGHT;
 			//std::cout << "view: " << view[i][j].x << ", " << view[i][j].y << std::endl;
 			//remap the coordinates from 0:1 to -1:1
 			double pixelRemappedX = (2 * pixelNormalisedX - 1) * ASPECT_RATIO;
 			double pixelRemappedY = 1 - 2 * pixelNormalisedY;
 
 			//incorporate field of view (FOV)
-			double cameraX = pixelRemappedX * tan(FOV / 2);
-			double cameraY = pixelRemappedY * tan(FOV / 2);
+			double cameraX = pixelRemappedX * tan(FOV / 2.0f);
+			double cameraY = pixelRemappedY * tan(FOV / 2.0f);
 			//std::cout << "camera : " << cameraX << ", " << cameraY << std::endl;
 
 			//represent camera position as vector
@@ -230,7 +225,7 @@ void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 		//get normal from shape at intersection point
 		glm::vec3 normal = glm::normalize(currentShape->getNormal(intersectionPoint));
 		//glm::vec3 normal = currentShape->getNormal(intersectionPoint);
-		shadowRayOrigin = &(intersectionPoint + (normal * float(0.1)));
+		shadowRayOrigin = &(intersectionPoint + (normal * float(0.1f)));
 
 		//check for intersections with spheres
 		for (int k = 0; k < shapeList->getLength(); k++)
@@ -245,9 +240,9 @@ void::RayCasting::softShadows(glm::vec3 **view, int i, int j, Shape *currentShap
 		}
 	}
 	//std::cout << "Hit count: " << hitCount << std::endl;
-	view[i][j].x -= ((view[i][j].x / pow(samples, 2)) * hitCount);
-	view[i][j].y -= ((view[i][j].y / pow(samples, 2)) * hitCount);
-	view[i][j].z -= ((view[i][j].z / pow(samples, 2)) * hitCount);
+	view[i][j].x -= ((view[i][j].x / (samples * samples)) * hitCount);
+	view[i][j].y -= ((view[i][j].y / (samples * samples)) * hitCount);
+	view[i][j].z -= ((view[i][j].z / (samples * samples)) * hitCount);
 }
 
 //drawPixel

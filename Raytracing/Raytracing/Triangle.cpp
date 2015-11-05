@@ -36,18 +36,20 @@ bool::Triangle::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *dis
 	//std::cout << "AToC: " << aToC.x << ", " << aToC.y << ", " << aToC.z << std::endl;
 	//calculate barycentric coords
 		//u = ((o-a).(d*e2))/e1.(d*e2)
-	double u = (glm::dot((*rayOrigin - *point1), (glm::cross(rayDir, aToC))) / glm::dot(aToB, (glm::cross(rayDir,aToC))));
+	
+	float u = (glm::dot((*rayOrigin - *point1), (glm::cross(rayDir, aToC))) / glm::dot(aToB, (glm::cross(rayDir,aToC))));
 		//v = d.((o-a)*e1)/e1.(d*e2)
-	double v = (glm::dot(rayDir, (glm::cross((*rayOrigin - *point1),aToB)))) / glm::dot(aToB, (glm::cross(rayDir,aToC)));
+	float v = (glm::dot(rayDir, (glm::cross((*rayOrigin - *point1), aToB)))) / glm::dot(aToB, (glm::cross(rayDir, aToC)));
 	//w = 1 - u -v  // u + v + w = 1
-	double w = 1 - u - v;
+	float w = 1 - u - v;
 	//express any point in triangle with
 		//p = ua + vb + wc
 
-
-	glm::vec3 *intersectionPoint = new glm::vec3((*point1)*float(u)+ (*point2)*float(v)+ (*point3)*float(w));
+	glm::vec3 intersectionPoint = ( *point1*u + *point2*v + *point3*w);
 	
-	*distance = glm::distance(*intersectionPoint, *rayOrigin);
+
+
+	*distance = glm::distance(intersectionPoint, *rayOrigin);
 
 	//check if point is in unit triangle
 	// 0 <= u,v,w <= 1

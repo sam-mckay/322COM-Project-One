@@ -6,9 +6,10 @@ Sphere::Sphere()
 }
 
 //Parameter = double (Radius)
-Sphere::Sphere(glm::vec3 *position, glm::vec3 colour, double r) :Shape(position, colour)
+Sphere::Sphere(glm::vec3 *position, glm::vec3 colour, float r) :Shape(position, colour)
 {
 	radius = r;
+	diameter = r * r;
 }
 
 Sphere::~Sphere()
@@ -44,14 +45,14 @@ bool::Sphere::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *dista
 
 	//distance beteween current point and sphere position
 	//s2
-	double centreToCurrentPoint = glm::dot(objectDistance, objectDistance) - pow(rayDistance, 2);
+	double centreToCurrentPoint = glm::dot(objectDistance, objectDistance) - (rayDistance *rayDistance);
 
 	//std::cout << "dot product result: " << glm::dot(objectDistance, objectDistance) << std::endl;
 	//std::cout << "origin to current point: " << centreToCurrentPoint << std::endl;
 	
 	//check if current point to origin is further than radius
 	//return false if so as no intersection
-	if (centreToCurrentPoint > pow(radius, 2))
+	if (centreToCurrentPoint > diameter)
 	{
 		//std::cout << "FAILED - CHECK 2 - NO INTERSECTION" << std::endl;
 		return false;

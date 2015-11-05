@@ -36,7 +36,8 @@ bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distan
 	//where t = ((L0 - P0).n) / (L.n)
 		
 	//origin to plane direction
-	glm::vec3 planeDir = *rayOrigin - *position;
+	glm::vec3 planeDir = *position - *rayOrigin;
+
 	
 	//dot product planeDir with the normal
 	double planeDotNorm = glm::dot(planeDir, *normal);
@@ -45,18 +46,23 @@ bool::Plane::intersection(glm::vec3 *rayOrigin, glm::vec3 rayDir, double *distan
 	double rayDotNorm = glm::dot(rayDir, *normal);
 
 	//t
-	double tPlaneDistance = 0-(planeDotNorm/rayDotNorm);
-
-	*distance = tPlaneDistance;
-
-	if (tPlaneDistance >= 0)
+	if (abs(rayDotNorm) > 1e-6)
 	{
-		return true;
+		double tPlaneDistance = planeDotNorm/rayDotNorm;
+
+		*distance = tPlaneDistance;
+
+		if (tPlaneDistance >= 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+
 	}
-	else
-	{
-		return false;
-	}
+	return false;
 }
 
 glm::vec3 Plane::getNormal(glm::vec3 intersectionPoint)
